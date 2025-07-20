@@ -18,6 +18,9 @@ app.use('/', (req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: false }))  // Parses URL-encoded bodies (as sent by HTML forms) and makes the data available under req.body
 app.use(express.static(path.join(__dirname, 'public'))) // Serves static files like css, js, images etc. from public folder
 
+app.set('view engine' , 'pug')
+app.set('views' , 'views')
+
 /* Why adminRoutes is above shopRoutes?
 * Because the order of middleware matters in Express. The first matching route will be used, so
 * if adminRoutes were below shopRoutes, the /add-product route would never be reached.
@@ -29,7 +32,8 @@ app.use('/admin',adminData.routes) // Mounts the admin routes on the /admin path
 app.use(shopRoutes) // Mounts the shop routes on the root path
 
 app.use((req,res,next) =>{ 
-    res.status(404).sendFile(path.join(__dirname , 'views' , '404.html' )) 
+    // res.status(404).sendFile(path.join(__dirname , 'views' , '404.html' )) 
+    res.status(404).render('404' , {pgTitle: '404'}) 
 })
 
 
