@@ -4,7 +4,7 @@ const router = express.Router();
 // const rootDir = require("../utils/path");
 // const adminData = require("./admin");
 
-const productsController = require('../controllers/products')
+const shopController = require("../controllers/shop.js");
 
 /* What will happen if we use router.use instead of router.get?
  * If we use router.use, it will match all HTTP methods (GET, POST, PUT, DELETE, etc.) for the specified path.
@@ -12,7 +12,6 @@ const productsController = require('../controllers/products')
  * In contrast, router.get will only match GET requests to the / path, which is what we want for serving the shop page.
  * So, using router.get is more appropriate here as we are only interested in handling GET requests
  */
-
 
 /*
  * path.join() detects the OS an concat the path
@@ -25,6 +24,20 @@ const productsController = require('../controllers/products')
  */
 // console.log('shop.js ',adminData.products)
 // res.sendFile(path.join(rootDir, 'views', 'shop.html'))
-router.get("/", productsController.getProducts);
+router.get("/", shopController.getIndex);
+router.get("/products" , shopController.getProducts);
+// : (colon) - means at that position something will come.
+/* 
+* If another route with /products/xyx is there , 
+* then put the more specific route on top .
+* coz if the one with colon is interpreted first then 
+* at : (colon) position the xyz will get attached and then
+* product/xyz will be routed.
+*/
+router.get("/products/:productId" , shopController.getProduct);
+router.get("/cart", shopController.getCart);
+router.post("/cart", shopController.postCart)
+router.get("/order", shopController.getOrder);
+router.get("/checkout",shopController.getCheckout);
 
 module.exports = router;
