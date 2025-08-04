@@ -7,13 +7,14 @@ const controllerFolder = require("./controllers/error");
 // const handleBars = require("express-handlebars");
 
 const db = require("./utils/database");
-db.execute("SELECT * FROM products")
-.then(result => {
-  console.log(result)
-})
-.catch(err => {
-  console.log(err)
-});
+
+// db.execute("SELECT * FROM products")
+// .then(result => {
+//   console.log(result)
+// })
+// .catch(err => {
+//   console.log(err)
+// });
 
 const adminRoutes = require("./routes/admin"); // Importing the admin routes
 const shopRoutes = require("./routes/shop"); // Importing the shop routes

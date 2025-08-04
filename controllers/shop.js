@@ -18,7 +18,7 @@ exports.getCart = (req, res, next) => {
       res.render("shop/cart", {
         path: "/cart",
         pageTitle: "Cart",
-        products: cartProducts
+        products: cartProducts,
       });
     });
   });
@@ -33,12 +33,12 @@ exports.postCart = (req, res, next) => {
 };
 
 exports.postCartDelete = (req, res, next) => {
-  const prodId = req.body.productId
-  Product.findById(prodId, product => {
-    Cart.deleteProduct(prodId, product.price)
-    res.redirect('/cart')
-  })
-}
+  const prodId = req.body.productId;
+  Product.findById(prodId, (product) => {
+    Cart.deleteProduct(prodId, product.price);
+    res.redirect("/cart");
+  });
+};
 
 exports.getOrder = (req, res, next) => {
   res.render("shop/order", {
@@ -47,38 +47,57 @@ exports.getOrder = (req, res, next) => {
   });
 };
 
+// Viewing products with products.
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll((products) => {
-    res.render("shop/product-list", {
-      prods: products,
-      pageTitle: "Shop",
-      path: "/product-list", // To set active = true in templating engine
-    });
-  });
+  Product.fetchAll()
+  .then(([rows]) => {   // fetchAll return array of arrays, thats why -> [row] 
+    {
+      res.render("shop/product-list", {
+        prods: rows,
+        pageTitle: "Shop",
+        path: "/product-list", // To set active = true in templating engine
+      });
+    }
+  })
+  .catch(err => console.log(err))
 };
 
+// For getting Product Details
 exports.getProduct = (req, res, next) => {
   /* The name given with colon (:) in route,
   that can be accessed using params.givenName .
   */
   const prodId = req.params.productId;
-  Product.findById(prodId, (product) => {
+  Product.findById(prodId)
+  .then(([product]) => {
     res.render("shop/product-details", {
-      product: product,
+      product: product[0],  // product parameter recieves array of arrays.
       pageTitle: "product-details",
       path: "/product-list",
     });
-  });
+  })
 };
 
+// exports.getIndex = (req, res, next) => {
+//   Product.fetchAll((products) => {
+//     res.render("shop/index", {
+//       prods: products,
+//       pageTitle: "Shop",
+//       path: "/shop", // To set active = true in templating engine
+//     });
+//   });
+// };
+
 exports.getIndex = (req, res, next) => {
-  Product.fetchAll((products) => {
-    res.render("shop/index", {
-      prods: products,
-      pageTitle: "Shop",
-      path: "/shop", // To set active = true in templating engine
-    });
-  });
+  Product.fetchAll()
+    .then(([rows]) => {
+      res.render("shop/index", {
+        prods: rows, // row is the product
+        pageTitle: "Shop",
+        path: "/shop",
+      });
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getCheckout = (req, res, next) => {

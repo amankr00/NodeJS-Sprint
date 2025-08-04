@@ -10,7 +10,7 @@ exports.getAddProducts = (req, res, next) => {
   res.render("admin/edit-products", {
     pageTitle: "Add-Product",
     path: "/admin/add-product", // To set active = true in templating engine
-    editing : false
+    editing: false,
   });
 };
 
@@ -19,9 +19,13 @@ exports.postAddProducts = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const description = req.body.description;
   const price = req.body.price;
-  const product = new Product(title, imageUrl, description, price);
-  product.save();
-  res.redirect("/");
+  const product = new Product(null, title, imageUrl, description, price);
+  product
+    .save()
+    .then(() => {
+      res.redirect("/");
+    })
+    .catch((err) => console.log(err));
 };
 
 // exports.getEditProduct = (req, res, next) => {
@@ -35,8 +39,8 @@ exports.postAddProducts = (req, res, next) => {
 //   if (!editMode) {
 //     return res.redirect('/');
 //   }
-  
-//   // params - To capture dynamic routes from routes file. 
+
+//   // params - To capture dynamic routes from routes file.
 //   const prodId = req.params.productId
 //   Product.findById(prodId , product => {
 //     if(!product){
@@ -48,32 +52,31 @@ exports.postAddProducts = (req, res, next) => {
 //       editing: editMode, // If editing will be used to create difference coz same ejs file is used both for Add-product and edit-product
 //       product: product
 //     });
-//   }) 
+//   })
 //   console.log(editMode)
 // };
 
 exports.getEditProduct = (req, res, next) => {
-  console.log('Editing!!!')
+  console.log("Editing!!!");
   // editMode - To check whether adding is done or editing is done!!
   const editMode = req.query.edit;
   if (!editMode) {
-    return res.redirect('/');
+    return res.redirect("/");
   }
   // params - Captures the dynamic routing , send from routes folder!!
   const prodId = req.params.productId;
-  Product.findById(prodId, product => {
+  Product.findById(prodId, (product) => {
     if (!product) {
-      return res.redirect('/');
+      return res.redirect("/");
     }
-      res.render('admin/edit-products', {
-      pageTitle: 'Edit Product',
-      path: '/admin/edit-product',
+    res.render("admin/edit-products", {
+      pageTitle: "Edit Product",
+      path: "/admin/edit-product",
       editing: editMode,
-      product: product
-  });
+      product: product,
+    });
   });
 };
-
 
 exports.getProducts = (req, res, next) => {
   Product.fetchAll((products) => {
@@ -86,8 +89,7 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.postDeleteProduct = (req, res, next) => {
-  const prodId = req.body.productId
-  Product.deleteById(prodId)
-  res.redirect("admin-products")
-}
-
+  const prodId = req.body.productId;
+  Product.deleteById(prodId);
+  res.redirect("admin-products");
+};
