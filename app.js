@@ -3,8 +3,17 @@ const express = require("express");
 const bodyParser = require("body-parser"); // Parses the incoming request bodies in a middleware before your handlers, available under the req.body property
 const path = require("path"); // Helps to work with file and directory paths in a cross-platform way
 const app = express();
-const controllerFolder = require('./controllers/error')
+const controllerFolder = require("./controllers/error");
 // const handleBars = require("express-handlebars");
+
+const db = require("./utils/database");
+db.execute("SELECT * FROM products")
+.then(result => {
+  console.log(result)
+})
+.catch(err => {
+  console.log(err)
+});
 
 const adminRoutes = require("./routes/admin"); // Importing the admin routes
 const shopRoutes = require("./routes/shop"); // Importing the shop routes
@@ -32,7 +41,7 @@ app.engine(
 app.set("view engine", "hbs"); // same name is passed
 */
 // app.set('view engine' , 'pug')
-app.set('view engine' , 'ejs')
+app.set("view engine", "ejs");
 app.set("views", "views");
 
 /* Why adminRoutes is above shopRoutes?

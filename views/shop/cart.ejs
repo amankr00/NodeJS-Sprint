@@ -1,7 +1,25 @@
-<%- include('../includes/head') %>
-
+<%- include('../includes/head') %> 
 <%- include('../includes/navigation') %>
-
-    <h2>Cart is Empty!!</h2>
+<!-- 
+* Read from cart.json.
+* 
+  -->
+<main>
+  <% if(products.length > 0) { %>
+  <ul>
+    <% products.forEach(p => { %>
+    <li>
+        <p><%= p.productData.title %> (<%= p.qty %>)</p>
+        <form action="/cart-delete-item" method="POST">
+            <input type="hidden" name="productId" value="<%= p.productData.id %>">
+            <button class="btn" type="submit">DELETE</button>
+        </form>
+    </li>
+    <% }) %>
+  </ul>
+  <% } else { %>
+  <h1>No Products in Cart</h1>
+  <% } %>
+</main>
 
 <%- include('../includes/end') %>
