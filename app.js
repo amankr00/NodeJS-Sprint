@@ -5,8 +5,14 @@ const path = require("path"); // Helps to work with file and directory paths in 
 const app = express();
 const controllerFolder = require("./controllers/error");
 // const handleBars = require("express-handlebars");
-
-const db = require("./utils/database");
+const sequelize = require("./utils/database"); // importing sequelize ORM from utils/database.
+const Product = require("./models/product");
+const User = require("./models/user");
+const Cart = require("./models/cart");
+const CartItem = require("./models/cart-item");
+const Order = require("./models/order");
+const OrderItem = require("./models/order-item");
+// const db = require("./utils/database");
 
 // db.execute("SELECT * FROM products")
 // .then(result => {
@@ -15,6 +21,21 @@ const db = require("./utils/database");
 // .catch(err => {
 //   console.log(err)
 // });
+
+/* app.use() is a method to mount middleware functions at the specified path.
+ * Below code will execute for every request made to the server.
+ * The first argument is the path, and the second argument is the middleware function.
+ * If the path is not specified, it will execute for every request.
+ * If the path is specified, it will execute only for requests that match the path.
+ */
+app.use((req, res, next) => {
+  User.findByPk(1)
+    .then((user) => {
+      req.user = user; // we created user to capture the current login user.
+      next();
+    })
+    .catch((err) => console.log(err));
+});
 
 const adminRoutes = require("./routes/admin"); // Importing the admin routes
 const shopRoutes = require("./routes/shop"); // Importing the shop routes
@@ -57,9 +78,45 @@ app.use(shopRoutes); // Mounts the shop routes on the root path
 
 app.use(controllerFolder.errorPage);
 
-app.listen(3000, () => {
-  console.log("Server is listening at 3000!");
-});
+Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" }); // onDelete will DROP all the products associated with the user being deleted.
+User.hasMany(Product); // Product belongs to many users.
+User.hasOne(Cart);
+Cart.belongsTo(User);
+Cart.belongsToMany(Product, { through: CartItem });
+Product.belongsToMany(Cart, { through: CartItem });
+// This is useful for associating actions (like creating products) with a specific user.
+/*
+* User will have many orders. (one to many)
+* Order will have many users. (one to many)
+* Many order will have many products. (many to many) 
+NOTE: Many to many requires a join table.
+*/
+Order.belongsTo(User)
+User.hasMany(Order)
+Order.belongsToMany(Product ,{through: OrderItem})
+
+sequelize
+  // sync({ force: true}) // creates tables in the DB by refering the models. Force used to overwrite the db
+  .sync()
+  .then((result) => {
+    return User.findByPk(1);
+  })
+  .then((user) => {
+    if (!user) {
+      return User.create({ name: "Max", email: "test@test.com" });
+    }
+    return user;
+  })
+  .then((user) => {
+    return user.createCart();
+  })
+  .then((result) => {
+    app.listen(3000);
+  })
+  .catch((err) => console.log(err));
+// app.listen(3000, () => {
+//   console.log("Server is listening at 3000!");
+// });
 
 // const server = http.createServer(app);
 
