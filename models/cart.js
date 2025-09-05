@@ -61,8 +61,6 @@
 //   }
 // };
 
-
-
 // const fs = require('fs');
 // const path = require('path');
 
@@ -138,18 +136,17 @@
 //   }
 // };
 
+const Sequelize = require("sequelize");
 
-const Sequelize = require('sequelize')
+const sequalize = require("../utils/database-Sequalize");
 
-const sequalize = require('../utils/database')
-
-const Cart = sequalize.define('cart',{
+const Cart = sequalize.define("cart", {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,
     allowNull: false,
-    primaryKey: true
-  }
-})
+    primaryKey: true,
+  },
+});
 
-module.exports = Cart
+module.exports = Cart;

@@ -1,4 +1,7 @@
 const Product = require("../models/product");
+const mongodb = require("mongodb");
+
+const ObjectId = mongodb.ObjectId;
 
 exports.getAddProducts = (req, res, next) => {
   console.log("Adding!!");
@@ -24,17 +27,26 @@ exports.postAddProducts = (req, res, next) => {
    * createProduct is a method that Sequelize adds to the User model when we define a one-to many relationship
    * between User and Product. It allows us to create a new Product that is associated with the user.
    * This method takes an object with the product details as an argument and returns a promise.
-   */
-  req.user
-    .createProduct({
-      title: title,
-      price: price,
-      imageUrl: imageUrl,
-      description: description,
-    })
+  */
+  // req.user
+  //   .createProduct({
+  //     title: title,
+  //     price: price,
+  //     imageUrl: imageUrl,
+  //     description: description,
+  //   })
+  const product = new Product(
+    title,
+    price,
+    description,
+    imageUrl,
+    null,
+    req.user._id // Storing which user created the product.
+  )
+    .save()
     .then((result) => {
       console.log(result);
-      res.redirect("/admin/admin-products");
+      res.redirect("/admin/admin-product");
     })
     .catch((err) => {
       console.log(err);
@@ -89,10 +101,14 @@ exports.getEditProduct = (req, res, next) => {
   // params - Captures the dynamic routing , send from routes folder!!
   const prodId = req.params.productId;
   // Product.findByPk(prodId)
-  req.user
-    .getProducts({ where: { id: prodId } })
-    .then((products) => {
-      const product = products[0];
+
+  /*  SEQUALIZE-PART
+    req.user
+    .getProducts({ where: { id: prodId } }) 
+     SEQUALIZE-PART
+  */
+  Product.findById(prodId)
+    .then((product) => {
       if (!product) {
         return res.redirect("/");
       }
@@ -112,17 +128,16 @@ exports.postEditProduct = (req, res, next) => {
   const updatedPrice = req.body.price;
   const updatedImageUrl = req.body.imageUrl;
   const updatedDesc = req.body.description;
-  Product.findByPk(prodId)
-    .then((product) => {
-      if (!product) {
-        return res.redirect("/admin/admin-products");
-      }
-      product.title = updatedTitle;
-      product.price = updatedPrice;
-      product.description = updatedDesc;
-      product.imageUrl = updatedImageUrl;
-      return product.save();
-    })
+
+  const product = new Product(
+    updatedTitle,
+    updatedPrice,
+    updatedDesc,
+    updatedImageUrl,
+    new ObjectId(prodId)
+  );
+  product
+    .save()
     .then((result) => {
       console.log("UPDATED PRODUCT!");
       res.redirect("/admin/admin-products");
@@ -132,7 +147,7 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
   // Product.findAll()
-  req.user.getProducts()
+  Product.fetchAll()
     .then((products) => {
       res.render("admin/products", {
         prods: products,
@@ -154,12 +169,13 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findByPk(prodId)
-    .then((product) => product.destroy())
+  // Product.findByPk(prodId)
+  //   .then((product) => product.destroy())
+  Product.deleteById(prodId)
     .then((result) => {
       console.log("DESTROYED PRODUCT");
       res.redirect("/admin/admin-products");
     })
     .catch((err) => console.log(err));
-  res.redirect("/admin/admin-products");
+  // res.redirect("/admin/admin-products");
 };

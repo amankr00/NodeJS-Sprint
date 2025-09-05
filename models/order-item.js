@@ -1,15 +1,15 @@
 const Sequelize = require("sequelize");
 
-const sequalize = require("../utils/database");
+const sequalize = require("../utils/database-Sequalize");
 
 const orderItem = sequalize.define("orderItem", {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,
     allowNull: false,
-     primaryKey: true
+    primaryKey: true,
   },
-  quantity: Sequelize.INTEGER
+  quantity: Sequelize.INTEGER,
 });
 
-module.exports = orderItem
+module.exports = orderItem;

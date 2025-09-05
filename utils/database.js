@@ -1,26 +1,30 @@
-// const mysql = require('mysql2')
+const mongodb = require("mongodb");
+const MongoClient = mongodb.MongoClient;
 
-// /*
-// * createConnection needs to be excecuted everytime a query runs
-// * createPool needs to be excecuted only once even though more query is to be excecuted.
-// */
-// const pool = mysql.createPool({
-//     host: 'localhost',
-//     user: 'root',
-//     database: 'node-complete',
-//     password: 'bgcnCS24'
-// })
+let _db;
 
-// module.exports = pool.promise()
+// Establishes Connection with MongoDB
+// Callback helps to wait until the connection is established.
+const mongoConnect = callback => {
+    MongoClient.connect(
+      "mongodb+srv://amanDB:bgcnCS24@e-commerce.sw7dvht.mongodb.net/shop?retryWrites=true&w=majority&appName=E-Commerce"
+    )
+      .then((client) => {
+        console.log("Connected");
+        _db = client.db()  // Storing connection-instance in _db
+        callback(client)
+      })
+      .catch((err) => console.log(err));
+}
 
+// Lets access the db connection
+const getDb = () => {
+    if(_db) {
+        return _db;
+    }
+    throw 'No Database found!'
+}
+ 
+exports.mongoConnect = mongoConnect
+exports.getDb = getDb
 
-// ******* CONNECTION SETUP BEGINNING ***
-const Sequelize = require("sequelize");
-
-const sequelize = new Sequelize("node-complete", "root", "bgcnCS24", {
-  dialect: "mysql", // what db we are using
-  host: "localhost", // were the database serve is running.
-});
-
-module.exports = sequelize;
-// ******* CONNECTION SETUP END *********

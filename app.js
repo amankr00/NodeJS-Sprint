@@ -4,20 +4,24 @@ const bodyParser = require("body-parser"); // Parses the incoming request bodies
 const path = require("path"); // Helps to work with file and directory paths in a cross-platform way
 const app = express();
 const controllerFolder = require("./controllers/error");
+const mongoConnect = require('./utils/database').mongoConnect
 // const handleBars = require("express-handlebars");
-const sequelize = require("./utils/database"); // importing sequelize ORM from utils/database.
-const Product = require("./models/product");
+// const sequelize = require("./utils/database"); // importing sequelize ORM from utils/database.
+// const Product = require("./models/product");
 const User = require("./models/user");
-const Cart = require("./models/cart");
-const CartItem = require("./models/cart-item");
-const Order = require("./models/order");
-const OrderItem = require("./models/order-item");
+const adminRoutes = require('./routes/admin')
+const shopRoutes = require("./routes/shop");
+// const Cart = require("./models/cart");
+// const CartItem = require("./models/cart-item");
+// const Order = require("./models/order");
+// const OrderItem = require("./models/order-item");
 // const db = require("./utils/database");
 
 // db.execute("SELECT * FROM products")
 // .then(result => {
 //   console.log(result)
 // })
+
 // .catch(err => {
 //   console.log(err)
 // });
@@ -29,16 +33,19 @@ const OrderItem = require("./models/order-item");
  * If the path is specified, it will execute only for requests that match the path.
  */
 app.use((req, res, next) => {
-  User.findByPk(1)
+  User.findById('68b95d8b8e726d43334e9767')
     .then((user) => {
-      req.user = user; // we created user to capture the current login user.
-      next();
+      // to capture a user to test further works.
+      // new User is used to access all the methods of user.
+      req.user = new User(user.name, user.email, user.cart, user._id) 
+      console.log(user._id)
+      next()
     })
     .catch((err) => console.log(err));
 });
 
-const adminRoutes = require("./routes/admin"); // Importing the admin routes
-const shopRoutes = require("./routes/shop"); // Importing the shop routes
+// const adminRoutes = require("./routes/admin"); // Importing the admin routes
+// const shopRoutes = require("./routes/shop"); // Importing the shop routes
 
 /* Func inside use used by every single request.
 app.use('/', (req, res, next) => {
@@ -46,6 +53,8 @@ app.use('/', (req, res, next) => {
     next() // Allows the request to continue to the next middleware in line
 })  // Next argument is a fucntion . 
 */
+
+
 
 app.use(bodyParser.urlencoded({ extended: false })); // Parses URL-encoded bodies (as sent by HTML forms) and makes the data available under req.body
 app.use(express.static(path.join(__dirname, "public"))); // Serves static files like css, js, images etc. from public folder
@@ -78,42 +87,48 @@ app.use(shopRoutes); // Mounts the shop routes on the root path
 
 app.use(controllerFolder.errorPage);
 
-Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" }); // onDelete will DROP all the products associated with the user being deleted.
-User.hasMany(Product); // Product belongs to many users.
-User.hasOne(Cart);
-Cart.belongsTo(User);
-Cart.belongsToMany(Product, { through: CartItem });
-Product.belongsToMany(Cart, { through: CartItem });
+
+mongoConnect(() => {
+  app.listen(3000);
+});
+
+// Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" }); // onDelete will DROP all the products associated with the user being deleted.
+// User.hasMany(Product); // Product belongs to many users.
+// User.hasOne(Cart);
+// Cart.belongsTo(User);
+// Cart.belongsToMany(Product, { through: CartItem });
+// Product.belongsToMany(Cart, { through: CartItem });
 // This is useful for associating actions (like creating products) with a specific user.
 /*
 * User will have many orders. (one to many)
 * Order will have many users. (one to many)
 * Many order will have many products. (many to many) 
 NOTE: Many to many requires a join table.
-*/
-Order.belongsTo(User)
-User.hasMany(Order)
-Order.belongsToMany(Product ,{through: OrderItem})
+ */
+// Order.belongsTo(User)
+// User.hasMany(Order)
+// Order.belongsToMany(Product ,{through: OrderItem})
 
-sequelize
-  // sync({ force: true}) // creates tables in the DB by refering the models. Force used to overwrite the db
-  .sync()
-  .then((result) => {
-    return User.findByPk(1);
-  })
-  .then((user) => {
-    if (!user) {
-      return User.create({ name: "Max", email: "test@test.com" });
-    }
-    return user;
-  })
-  .then((user) => {
-    return user.createCart();
-  })
-  .then((result) => {
-    app.listen(3000);
-  })
-  .catch((err) => console.log(err));
+// sequelize
+//   // sync({ force: true}) // creates tables in the DB by refering the models. Force used to overwrite the db
+//   .sync()
+//   .then((result) => {
+//     return User.findByPk(1);
+//   })
+//   .then((user) => {
+//     if (!user) {
+//       return User.create({ name: "Max", email: "test@test.com" });
+//     }
+//     return user;
+//   })
+//   .then((user) => {
+//     return user.createCart();
+//   })
+//   .then((result) => {
+//     app.listen(3000);
+//   })
+//   .catch((err) => console.log(err));
+
 // app.listen(3000, () => {
 //   console.log("Server is listening at 3000!");
 // });
@@ -131,3 +146,4 @@ sequelize
 * })
 
  mainServer.listen(4000) */
+
