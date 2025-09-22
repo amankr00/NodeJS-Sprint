@@ -1,23 +1,16 @@
 const Product = require("../models/product");
 const Cart = require("../models/cart");
 
-/*
- */
+
 exports.getCart = (req, res, next) => {
   req.user
     .getCart()
-    .then((cart) => {
-      // console.log(cart)
-      return cart
-        .getProducts()
         .then((products) => {
           res.render("shop/cart", {
             path: "/cart",
             pageTitle: "Cart",
             products: products,
           });
-        })
-        .catch((err) => console.log(err));
     })
     .catch((err) => console.log(err));
   // Cart.getCart((cart) => {
@@ -98,14 +91,15 @@ exports.postCartDelete = (req, res, next) => {
   we access the cart, then get the products 
   */
   req.user
-    .getCart() // fetches the cart which belongs to user ,eg: user id =1 has cart id = 5
-    .then((cart) => {
-      return cart.getProducts({ where: { id: prodId } });
-    })
-    .then((products) => {
-      const product = products[0];
-      return product.cartItem.destroy();
-    })
+  .deleteItemFromCart(prodId)
+    // .getCart() // fetches the cart which belongs to user ,eg: user id =1 has cart id = 5
+    // .then((cart) => {
+    //   return cart.getProducts({ where: { id: prodId } });
+    // })
+    // .then((products) => {
+    //   const product = products[0];
+    //   return product.cartItem.destroy();
+    // })
     .then((result) => {
       res.redirect("/cart");
     })
@@ -115,56 +109,64 @@ exports.postCartDelete = (req, res, next) => {
 exports.postOrder = (req, res, next) => {
   let fetchCart; // To clear cart when order has been placed
   req.user
-    .getCart()
-    .then((cart) => {
-      fetchCart = cart; // Now cart and fetchCart points to the same db location,
-      //deleting fetchcart.setProducts(NULL) will delete the row in the join table.
-      return cart.getProducts();
+    .addOrder()
+    .then(result => {
+      res.redirect('/order')
     })
-    .then((products) => {
-      /*
-       * CreateOrder with sequalize magic method,
-       * then addProducts with seq.. magic method,
-       * to add the quantity of products we,
-       * use products.map(product =>{
-       * product.orderItem = create new variable to store the qty.
-       * product.orderItem = {quantity: product.cartItem.quantity}
-       * })
-       * finally return the product.
-       */
-      return req.user
-        .createOrder()
-        .then((order) => {
-          return order.addProducts(
-            products.map((product) => {
-              product.orderItem = { quantity: product.cartItem.quantity };
-              return product;
-            })
-          );
-        })
-        .catch((err) => console.log(err));
-    })
-    .then((result) => {
-      return fetchCart.setProducts(null);
-    })
-    .then((result) => {
-      res.redirect("/order");
-    })
+    // .then((cart) => {
+    //   fetchCart = cart; // Now cart and fetchCart points to the same db location,
+    //   //deleting fetchcart.setProducts(NULL) will delete the row in the join table.
+    //   return cart.getProducts();
+    // })
+    // .then((products) => {
+    //   /*
+    //    * CreateOrder with sequalize magic method,
+    //    * then addProducts with seq.. magic method,
+    //    * to add the quantity of products we,
+    //    * use products.map(product =>{
+    //    * product.orderItem = create new variable to store the qty.
+    //    * product.orderItem = {quantity: product.cartItem.quantity}
+    //    * })
+    //    * finally return the product.
+    //    */
+    //   return req.user
+    //     .createOrder()
+    //     .then((order) => {
+    //       return order.addProducts(
+    //         products.map((product) => {
+    //           product.orderItem = { quantity: product.cartItem.quantity };
+    //           return product;
+    //         })
+    //       );
+    //     })
+    //     .catch((err) => console.log(err));
+    // })
+    // .then((result) => {
+    //   return fetchCart.setProducts(null);
+    // })
+    // .then((result) => {
+    //   res.redirect("/order");
+    // })
     .catch((err) => console.log(err));
 };
 
 exports.getOrder = (req, res, next) => {
+  /* Sequalize Part
+  .getOrders({ include: ["products"] }) // getOrders will also include products per order
+  // this works coz we have relation b/w orders and products.
+  */  // Sequalize Part
+  console.log("Order is being displayed on the client side!!")
   req.user
-    .getOrders({ include: ["products"] }) // getOrders will also include products per order
-    // this works coz we have relation b/w orders and products.
+    .getOrders()
     .then((orders) => {
       res.render("shop/order", {
         path: "/order",
-        pageTitle: "Order",
+        pageTitle: "Your Order",
         orders: orders,
       });
     })
     .catch((err) => console.log(err));
+
 };
 
 // Viewing products with products.
