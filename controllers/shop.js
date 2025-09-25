@@ -1,16 +1,20 @@
+// const Product = require("../models/product.MongoDB");
 const Product = require("../models/product");
 const Cart = require("../models/cart");
-
+const Order = require("../models/order");
 
 exports.getCart = (req, res, next) => {
   req.user
-    .getCart()
-        .then((products) => {
-          res.render("shop/cart", {
-            path: "/cart",
-            pageTitle: "Cart",
-            products: products,
-          });
+    // .getCart()
+    .populate("cart.items.productId")
+    // .execPopulate() -- with mongoose 6.x populate has become a promise.
+    .then((user) => {
+      const products = user.cart.items;
+      res.render("shop/cart", {
+        path: "/cart",
+        pageTitle: "Cart",
+        products: products,
+      });
     })
     .catch((err) => console.log(err));
   // Cart.getCart((cart) => {
@@ -41,7 +45,7 @@ exports.postCart = (req, res, next) => {
     })
     .then((result) => {
       console.log("Here is the result : ", result);
-      res.redirect('/cart')
+      res.redirect("/cart");
     })
     .catch((err) => console.log(err));
   //   // Product.findById(prodId, (product) => {
@@ -91,7 +95,7 @@ exports.postCartDelete = (req, res, next) => {
   we access the cart, then get the products 
   */
   req.user
-  .deleteItemFromCart(prodId)
+    // .deleteItemFromCart(prodId)
     // .getCart() // fetches the cart which belongs to user ,eg: user id =1 has cart id = 5
     // .then((cart) => {
     //   return cart.getProducts({ where: { id: prodId } });
@@ -100,6 +104,7 @@ exports.postCartDelete = (req, res, next) => {
     //   const product = products[0];
     //   return product.cartItem.destroy();
     // })
+    .removeFromCart(prodId)
     .then((result) => {
       res.redirect("/cart");
     })
@@ -107,11 +112,28 @@ exports.postCartDelete = (req, res, next) => {
 };
 
 exports.postOrder = (req, res, next) => {
-  let fetchCart; // To clear cart when order has been placed
+  // let fetchCart; // To clear cart when order has been placed
+  // get the products list
   req.user
-    .addOrder()
-    .then(result => {
-      res.redirect('/order')
+    .populate("cart.items.productId")
+    .then((user) => {
+      const products = user.cart.items.map((i) => {
+        return { quantity: i.quantity, product: { ...i.productId._doc } };
+      }); // Array of objects, each object having quantity and productId
+      const order = new Order({
+        user: {
+          name: req.user.name,
+          userId: req.user, // mongoose automatically assigns the id form the user object
+        },
+        products: products,
+      });
+      return order.save();
+    })
+    .then((result) => {
+      req.user.clearCart();
+    })
+    .then(() => {
+      res.redirect("/order");
     })
     // .then((cart) => {
     //   fetchCart = cart; // Now cart and fetchCart points to the same db location,
@@ -154,10 +176,9 @@ exports.getOrder = (req, res, next) => {
   /* Sequalize Part
   .getOrders({ include: ["products"] }) // getOrders will also include products per order
   // this works coz we have relation b/w orders and products.
-  */  // Sequalize Part
-  console.log("Order is being displayed on the client side!!")
-  req.user
-    .getOrders()
+  */ // Sequalize Part
+  console.log("Order is being displayed on the client side!!");
+  Order.find({ "user.userId": req.user._id })
     .then((orders) => {
       res.render("shop/order", {
         path: "/order",
@@ -166,7 +187,6 @@ exports.getOrder = (req, res, next) => {
       });
     })
     .catch((err) => console.log(err));
-
 };
 
 // Viewing products with products.
@@ -188,7 +208,8 @@ exports.getProducts = (req, res, next) => {
     */
   // Used with Raw SQL. *****************
 
-  Product.fetchAll()
+  // Product.fetchAll()
+  Product.find()
     .then((product) => {
       res.render("shop/product-list", {
         prods: product,
@@ -207,9 +228,12 @@ exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId;
   // Product.findByPk(prodId)  // For Sequalize
   // Product.findAll({ where: { id: prodId } })
+  /* Mongoose Notes
+   *  findById(xyz) -> automaticaly converts the xyz to mongodb.objectID Type.
+   */
   Product.findById(prodId)
     .then((products) => {
-      console.log(products);
+      // console.log(products);
       res.render("shop/product-details", {
         product: products,
         pageTitle: products.title,
@@ -237,6 +261,7 @@ exports.getProduct = (req, res, next) => {
 //   });
 // };
 
+// For shop route of nav-bar
 exports.getIndex = (req, res, next) => {
   /*
   Product.fetchAll()
@@ -249,8 +274,9 @@ exports.getIndex = (req, res, next) => {
     })
     .catch((err) => console.log(err));
   */
-  Product.fetchAll()
+  Product.find()
     .then((products) => {
+      // console.log(products);
       res.render("shop/index", {
         prods: products, // row is the product
         pageTitle: "Shop",

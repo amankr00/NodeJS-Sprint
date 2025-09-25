@@ -24,8 +24,8 @@ const shopController = require("../controllers/shop.js");
  */
 // console.log('shop.js ',adminData.products)
 // res.sendFile(path.join(rootDir, 'views', 'shop.html'))
-router.get("/", shopController.getIndex);
-router.get("/products" , shopController.getProducts);
+// router.get("/", shopController.getIndex);
+// router.get("/products" , shopController.getProducts);
 // : (colon) - means at that position something will come.
 /* 
 * If another route with /products/xyx is there , 
@@ -35,6 +35,7 @@ router.get("/products" , shopController.getProducts);
 * product/xyz will be routed.
 */
 router.get("/products/:productId" , shopController.getProduct);
+router.get("/" , shopController.getIndex);
 router.get("/cart", shopController.getCart);
 router.post("/cart", shopController.postCart)
 router.post("/cart-delete-item", shopController.postCartDelete)
@@ -43,3 +44,4 @@ router.get("/order", shopController.getOrder);
 router.post('/create-order', shopController.postOrder )
 
 module.exports = router;
+                     

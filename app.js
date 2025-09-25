@@ -2,14 +2,17 @@
 const express = require("express");
 const bodyParser = require("body-parser"); // Parses the incoming request bodies in a middleware before your handlers, available under the req.body property
 const path = require("path"); // Helps to work with file and directory paths in a cross-platform way
+const mongoose = require("mongoose");
+const User = require("./models/user");
+
 const app = express();
 const controllerFolder = require("./controllers/error");
-const mongoConnect = require('./utils/database').mongoConnect
+// const mongoConnect = require("./utils/database").mongoConnect;
 // const handleBars = require("express-handlebars");
 // const sequelize = require("./utils/database"); // importing sequelize ORM from utils/database.
 // const Product = require("./models/product");
-const User = require("./models/user");
-const adminRoutes = require('./routes/admin')
+// const User = require("./models/user.MongoDB");
+const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 // const Cart = require("./models/cart");
 // const CartItem = require("./models/cart-item");
@@ -33,13 +36,18 @@ const shopRoutes = require("./routes/shop");
  * If the path is specified, it will execute only for requests that match the path.
  */
 app.use((req, res, next) => {
-  User.findById('68b95d8b8e726d43334e9767')
+  User.findById("68d3c27007a3a76517b1e808")
     .then((user) => {
       // to capture a user to test further works.
       // new User is used to access all the methods of user.
-      req.user = new User(user.name, user.email, user.cart, user._id) 
-      console.log(user._id)
-      next()
+      /*
+      * Below line is used with mongodb as returned user was not user -> object.
+      req.user = new User(user.name, user.email, user.cart, user._id); 
+      */
+      // With mongoose findById gives the user object
+      req.user = user;
+      console.log(user);
+      next();
     })
     .catch((err) => console.log(err));
 });
@@ -53,8 +61,6 @@ app.use('/', (req, res, next) => {
     next() // Allows the request to continue to the next middleware in line
 })  // Next argument is a fucntion . 
 */
-
-
 
 app.use(bodyParser.urlencoded({ extended: false })); // Parses URL-encoded bodies (as sent by HTML forms) and makes the data available under req.body
 app.use(express.static(path.join(__dirname, "public"))); // Serves static files like css, js, images etc. from public folder
@@ -87,10 +93,32 @@ app.use(shopRoutes); // Mounts the shop routes on the root path
 
 app.use(controllerFolder.errorPage);
 
+mongoose
+  .connect(
+    "mongodb+srv://amanDB:bgcnCS24@e-commerce.sw7dvht.mongodb.net/shop?retryWrites=true&w=majority&appName=E-Commerce"
+  )
+  .then((result) => {
+    User.findOne().then((user) => {
+      if (!user) {
+        const user = new User({
+          name: "Max",
+          email: "max@test.com",
+          cart: {
+            items: [],
+          },
+        });
+        user.save();
+      }
+    });
+    app.listen(3000);
+  })
+  .catch((err) => console.log(err));
 
+/* connection with db WITHOUT mongoose 
 mongoConnect(() => {
   app.listen(3000);
 });
+*/
 
 // Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" }); // onDelete will DROP all the products associated with the user being deleted.
 // User.hasMany(Product); // Product belongs to many users.
@@ -146,4 +174,3 @@ NOTE: Many to many requires a join table.
 * })
 
  mainServer.listen(4000) */
-
