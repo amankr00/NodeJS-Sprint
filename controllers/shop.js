@@ -14,6 +14,7 @@ exports.getCart = (req, res, next) => {
         path: "/cart",
         pageTitle: "Cart",
         products: products,
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));
@@ -184,6 +185,7 @@ exports.getOrder = (req, res, next) => {
         path: "/order",
         pageTitle: "Your Order",
         orders: orders,
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));
@@ -215,6 +217,7 @@ exports.getProducts = (req, res, next) => {
         prods: product,
         pageTitle: "Shop",
         path: "/product-list", // To set active = true in templating engine
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));
@@ -238,6 +241,7 @@ exports.getProduct = (req, res, next) => {
         product: products,
         pageTitle: products.title,
         path: "product-list",
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));
@@ -281,6 +285,7 @@ exports.getIndex = (req, res, next) => {
         prods: products, // row is the product
         pageTitle: "Shop",
         path: "/shop",
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));
@@ -291,5 +296,6 @@ exports.getCheckout = (req, res, next) => {
     prods: products,
     pageTitle: "Shop",
     path: "/checkout", // To set active = true in templating engine
+    isAuthenticated: req.session.isLoggedIn,
   });
 };

@@ -35,6 +35,7 @@ const shopController = require("../controllers/shop.js");
 * product/xyz will be routed.
 */
 router.get("/products/:productId" , shopController.getProduct);
+router.get("/products" , shopController.getProducts);
 router.get("/" , shopController.getIndex);
 router.get("/cart", shopController.getCart);
 router.post("/cart", shopController.postCart)

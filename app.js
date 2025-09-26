@@ -4,8 +4,21 @@ const bodyParser = require("body-parser"); // Parses the incoming request bodies
 const path = require("path"); // Helps to work with file and directory paths in a cross-platform way
 const mongoose = require("mongoose");
 const User = require("./models/user");
+const session = require("express-session");
+// require("connect-mongodb-session") -> yeilds a function,
+// to we pass session variable
+// function(session) . As done below
+const MongoDBStore = require("connect-mongodb-session")(session); // this finally becomes a constructor
+
+MONGODB_URI =
+  "mongodb+srv://amanDB:bgcnCS24@e-commerce.sw7dvht.mongodb.net/shop?retryWrites=true&w=majority&appName=E-Commerce";
 
 const app = express();
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: "sessions", // can give any name to the collection.
+});
+
 const controllerFolder = require("./controllers/error");
 // const mongoConnect = require("./utils/database").mongoConnect;
 // const handleBars = require("express-handlebars");
@@ -14,6 +27,7 @@ const controllerFolder = require("./controllers/error");
 // const User = require("./models/user.MongoDB");
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
+const authRoutes = require("./routes/auth");
 // const Cart = require("./models/cart");
 // const CartItem = require("./models/cart-item");
 // const Order = require("./models/order");
@@ -35,22 +49,22 @@ const shopRoutes = require("./routes/shop");
  * If the path is not specified, it will execute for every request.
  * If the path is specified, it will execute only for requests that match the path.
  */
-app.use((req, res, next) => {
-  User.findById("68d3c27007a3a76517b1e808")
-    .then((user) => {
-      // to capture a user to test further works.
-      // new User is used to access all the methods of user.
-      /*
-      * Below line is used with mongodb as returned user was not user -> object.
-      req.user = new User(user.name, user.email, user.cart, user._id); 
-      */
-      // With mongoose findById gives the user object
-      req.user = user;
-      console.log(user);
-      next();
-    })
-    .catch((err) => console.log(err));
-});
+// app.use((req, res, next) => {
+//   User.findById("68d3c27007a3a76517b1e808")
+//     .then((user) => {
+//       // to capture a user to test further works.
+//       // new User is used to access all the methods of user.
+//       /*
+//       * Below line is used with mongodb as returned user was not user -> object.
+//       req.user = new User(user.name, user.email, user.cart, user._id);
+//       */
+//       // With mongoose findById gives the user object
+//       req.user = user;
+//       console.log(user);
+//       next();
+//     })
+//     .catch((err) => console.log(err));
+// });
 
 // const adminRoutes = require("./routes/admin"); // Importing the admin routes
 // const shopRoutes = require("./routes/shop"); // Importing the shop routes
@@ -64,7 +78,34 @@ app.use('/', (req, res, next) => {
 
 app.use(bodyParser.urlencoded({ extended: false })); // Parses URL-encoded bodies (as sent by HTML forms) and makes the data available under req.body
 app.use(express.static(path.join(__dirname, "public"))); // Serves static files like css, js, images etc. from public folder
+app.use(
+  session({
+    secret: "my secret",
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+  })
+);
 
+/* To use mongoose methods 
+* Our code base uses the mongoose methods for user.
+* For various cart and order get/post routes. Whose logic is written in 
+* user object.
+* So with the below middleware we store the userId object in req.user variable.
+* So we are getting the userId object which is nested with session.user object.
+* This will make the user specific routings alive.
+*/
+app.use((req, res, next) => {
+  if(!req.session.user){
+    return next()
+  }
+  User.findById(req.session.user._id)
+    .then((userId) => {
+      req.user = userId
+      next()
+    })
+    .catch((err) => console.log(err));
+});
 // For express-handlerBars
 /*
 app.engine(
@@ -90,13 +131,11 @@ app.set("views", "views");
 
 app.use("/admin", adminRoutes); // Mounts the admin routes on the /admin path
 app.use(shopRoutes); // Mounts the shop routes on the root path
-
+app.use(authRoutes);
 app.use(controllerFolder.errorPage);
 
 mongoose
-  .connect(
-    "mongodb+srv://amanDB:bgcnCS24@e-commerce.sw7dvht.mongodb.net/shop?retryWrites=true&w=majority&appName=E-Commerce"
-  )
+  .connect(MONGODB_URI)
   .then((result) => {
     User.findOne().then((user) => {
       if (!user) {

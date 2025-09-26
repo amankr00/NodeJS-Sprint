@@ -20,7 +20,7 @@
                     </div>
                     <div class="card__actions">
                         <a href="/products/<%= product._id %>" class="btn">Details</a>
-
+                      <!-- isAuthenticated flag is used inside the add-to-cart page. -->
                         <%- include('../includes/add-to-cart.ejs',{product:product}) %>
 
                     </div>
