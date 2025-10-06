@@ -5,6 +5,8 @@ const path = require("path"); // Helps to work with file and directory paths in 
 const mongoose = require("mongoose");
 const User = require("./models/user");
 const session = require("express-session");
+const csrf = require("csurf");
+const flash = require('connect-flash')
 // require("connect-mongodb-session") -> yeilds a function,
 // to we pass session variable
 // function(session) . As done below
@@ -18,6 +20,8 @@ const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: "sessions", // can give any name to the collection.
 });
+const csrfProtection = csrf();
+
 
 const controllerFolder = require("./controllers/error");
 // const mongoConnect = require("./utils/database").mongoConnect;
@@ -70,11 +74,11 @@ const authRoutes = require("./routes/auth");
 // const shopRoutes = require("./routes/shop"); // Importing the shop routes
 
 /* Func inside use used by every single request.
-app.use('/', (req, res, next) => {
-    console.log('This is middleware') 
-    next() // Allows the request to continue to the next middleware in line
-})  // Next argument is a fucntion . 
-*/
+      app.use('/', (req, res, next) => {
+        console.log('This is middleware') 
+        next() // Allows the request to continue to the next middleware in line
+        })  // Next argument is a fucntion . 
+        */
 
 app.use(bodyParser.urlencoded({ extended: false })); // Parses URL-encoded bodies (as sent by HTML forms) and makes the data available under req.body
 app.use(express.static(path.join(__dirname, "public"))); // Serves static files like css, js, images etc. from public folder
@@ -86,26 +90,41 @@ app.use(
     store: store,
   })
 );
+app.use(csrfProtection);
+app.use(flash())
 
-/* To use mongoose methods 
-* Our code base uses the mongoose methods for user.
-* For various cart and order get/post routes. Whose logic is written in 
-* user object.
-* So with the below middleware we store the userId object in req.user variable.
-* So we are getting the userId object which is nested with session.user object.
-* This will make the user specific routings alive.
-*/
+// After adding the sessions. We will add the csrf middleware
+
+/* To use mongoose methods
+ * Our code base uses the mongoose methods for user.
+ * For various cart and order get/post routes. Whose logic is written in
+ * user object.
+ * So with the below middleware we store the userId object in req.user variable.
+ * So we are getting the userId object which is nested with session.user object.
+ * This will make the user specific routings alive.
+ */
 app.use((req, res, next) => {
-  if(!req.session.user){
-    return next()
+  if (!req.session.user) {
+    return next();
   }
   User.findById(req.session.user._id)
     .then((userId) => {
-      req.user = userId
-      next()
+      req.user = userId;
+      next();
     })
     .catch((err) => console.log(err));
 });
+
+// locals are used to store temporary server-side data.
+// Once the response is sent the locals object gets cleared.
+// We are using locals to use the sessions and csrfToken data 
+// in other middlewares or templating engines. Templating engines can automatically use the locals.
+app.use((req,res,next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken()
+  next();
+})
+
 // For express-handlerBars
 /*
 app.engine(
@@ -137,18 +156,18 @@ app.use(controllerFolder.errorPage);
 mongoose
   .connect(MONGODB_URI)
   .then((result) => {
-    User.findOne().then((user) => {
-      if (!user) {
-        const user = new User({
-          name: "Max",
-          email: "max@test.com",
-          cart: {
-            items: [],
-          },
-        });
-        user.save();
-      }
-    });
+    // User.findOne().then((user) => {
+    //   if (!user) {
+    //     const user = new User({
+    //       name: "Max",
+    //       email: "max@test.com",
+    //       cart: {
+    //         items: [],
+    //       },
+    //     });
+    //     user.save();
+    //   }
+    // });
     app.listen(3000);
   })
   .catch((err) => console.log(err));

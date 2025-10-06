@@ -16,7 +16,7 @@ exports.getAddProducts = (req, res, next) => {
     pageTitle: "Add-Product",
     path: "/admin/add-product", // To set active = true in templating engine
     editing: false,
-    isAuthenticated: req.session.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn,
   });
 };
 
@@ -61,7 +61,7 @@ exports.postAddProducts = (req, res, next) => {
     price: price,
     imageUrl: imageUrl,
     // userId: req.user._id  instead of this we can use , as given below
-    userId: req.user // mongoose will automatically take the id from the user object
+    userId: req.user, // mongoose will automatically take the id from the user object
   });
   product
     .save() // Provided by mongoose.
@@ -139,7 +139,7 @@ exports.getEditProduct = (req, res, next) => {
         path: "/admin/edit-product",
         editing: editMode,
         product: product,
-        isAuthenticated: req.session.isLoggedIn
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));
@@ -162,10 +162,10 @@ exports.postEditProduct = (req, res, next) => {
   );
   */
   Product.findById(prodId)
-  /* Mongoose returns the product object which
-  *  for which we can use the product.key for each 
-  *  and update the values.
-  */
+    /* Mongoose returns the product object which
+     *  for which we can use the product.key for each
+     *  and update the values.
+     */
     .then((product) => {
       product.title = updatedTitle;
       product.price = updatedPrice;
@@ -184,21 +184,21 @@ exports.getProducts = (req, res, next) => {
   // Product.findAll()
   // Product.fetchAll()
   Product.find()
-  /*select only gets the keys given to select and - means don't give.
+    /*select only gets the keys given to select and - means don't give.
   Select is used with the main document
   .select('name price -_id') 
   */
-  /*Populate retrieves all the data of the given ObjectID, 
+    /*Populate retrieves all the data of the given ObjectID, 
     and not just the objectID. 2nd arg is for what keys to get, its like the select.
    .populate('userId', 'name')
-  */ 
+  */
     .then((products) => {
       // console.log(products)
       res.render("admin/products", {
         prods: products,
         pageTitle: "Admin Products",
         path: "admin-products",
-        isAuthenticated: req.session.isLoggedIn
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));

@@ -3,6 +3,7 @@ const Product = require("../models/product");
 const Cart = require("../models/cart");
 const Order = require("../models/order");
 
+
 exports.getCart = (req, res, next) => {
   req.user
     // .getCart()
@@ -123,7 +124,7 @@ exports.postOrder = (req, res, next) => {
       }); // Array of objects, each object having quantity and productId
       const order = new Order({
         user: {
-          name: req.user.name,
+          email: req.user.email,
           userId: req.user, // mongoose automatically assigns the id form the user object
         },
         products: products,
@@ -286,6 +287,7 @@ exports.getIndex = (req, res, next) => {
         pageTitle: "Shop",
         path: "/shop",
         isAuthenticated: req.session.isLoggedIn,
+        csrfToken: req.csrfToken() // This will generate a token.
       });
     })
     .catch((err) => console.log(err));

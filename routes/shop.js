@@ -5,6 +5,7 @@ const router = express.Router();
 // const adminData = require("./admin");
 
 const shopController = require("../controllers/shop.js");
+const isAuth = require("../middleware/is-auth.js");
 
 /* What will happen if we use router.use instead of router.get?
  * If we use router.use, it will match all HTTP methods (GET, POST, PUT, DELETE, etc.) for the specified path.
@@ -27,22 +28,22 @@ const shopController = require("../controllers/shop.js");
 // router.get("/", shopController.getIndex);
 // router.get("/products" , shopController.getProducts);
 // : (colon) - means at that position something will come.
-/* 
-* If another route with /products/xyx is there , 
-* then put the more specific route on top .
-* coz if the one with colon is interpreted first then 
-* at : (colon) position the xyz will get attached and then
-* product/xyz will be routed.
-*/
-router.get("/products/:productId" , shopController.getProduct);
-router.get("/products" , shopController.getProducts);
-router.get("/" , shopController.getIndex);
-router.get("/cart", shopController.getCart);
-router.post("/cart", shopController.postCart)
-router.post("/cart-delete-item", shopController.postCartDelete)
-router.get("/order", shopController.getOrder);
+/*
+ * If another route with /products/xyx is there ,
+ * then put the more specific route on top .
+ * coz if the one with colon is interpreted first then
+ * at : (colon) position the xyz will get attached and then
+ * product/xyz will be routed.
+ */
+router.get("/products/:productId", shopController.getProduct);
+router.get("/products", shopController.getProducts);
+router.get("/", shopController.getIndex);
+router.get("/cart", isAuth, shopController.getCart);
+router.post("/cart", isAuth, shopController.postCart);
+router.post("/cart-delete-item", isAuth, shopController.postCartDelete);
+router.get("/order", isAuth, shopController.getOrder);
 // router.get("/checkout",shopController.getCheckout);
-router.post('/create-order', shopController.postOrder )
+router.post("/create-order", isAuth, shopController.postOrder);
 
 module.exports = router;
-                     
+
