@@ -5,8 +5,8 @@ const path = require("path"); // Helps to work with file and directory paths in 
 const mongoose = require("mongoose");
 const User = require("./models/user");
 const session = require("express-session");
-const csrf = require("csurf");
-const flash = require('connect-flash')
+const csrf = require("csurf"); // for csrf tokens.
+const flash = require('connect-flash') // for sending flash message.For ex: Error message
 // require("connect-mongodb-session") -> yeilds a function,
 // to we pass session variable
 // function(session) . As done below
@@ -20,7 +20,9 @@ const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: "sessions", // can give any name to the collection.
 });
-const csrfProtection = csrf();
+
+// Request ➜ [Middleware 1] ➜ [Middleware 2] ➜ [Route Handler] ➜ Response
+const csrfProtection = csrf(); // This is a middleware
 
 
 const controllerFolder = require("./controllers/error");
@@ -118,7 +120,9 @@ app.use((req, res, next) => {
 // locals are used to store temporary server-side data.
 // Once the response is sent the locals object gets cleared.
 // We are using locals to use the sessions and csrfToken data 
-// in other middlewares or templating engines. Templating engines can automatically use the locals.
+// in other middlewares or templating engines. 
+// Templating engines can automatically use the locals.
+// Saved the token with in templating engines and sent to the client.
 app.use((req,res,next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;
   res.locals.csrfToken = req.csrfToken()
